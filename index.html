@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shakala Bakery - Order Detail</title>
+    <style>
+        :root {
+            --primary-color: #d2691e;
+            --bg-color: #fffaf0;
+            --text-color: #4a3623;
+            --box-bg: #ffffff;
+            --accent-color: #fcece0;
+            --danger-color: #dc3545;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background-color: var(--box-bg); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+        h1 { text-align: center; color: var(--primary-color); margin-bottom: 5px; font-size: 28px; }
+        p.subtitle { text-align: center; font-size: 14px; color: #777; margin-bottom: 15px; }
+        
+        /* Tombol Map & Menu */
+        .btn-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .btn-action { background-color: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-action:hover { background-color: var(--primary-color); color: white; }
+
+        .form-group { margin-bottom: 20px; }
+        label.section-title { display: block; font-weight: bold; margin-bottom: 10px; font-size: 16px; border-bottom: 2px solid var(--bg-color); padding-bottom: 5px; }
+        select, input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; background-color: #fcfcfc; margin-bottom: 10px; }
+        
+        /* --- STYLING BARU UNTUK BLOK PAKET --- */
+        .paket-box { background-color: #fcf8f5; border: 2px dashed #eed6c4; border-radius: 12px; padding: 15px; margin-bottom: 20px; position: relative; }
+        .paket-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eed6c4; padding-bottom: 10px; }
+        .paket-header h3 { font-size: 16px; color: var(--primary-color); }
+        .btn-hapus { background-color: #ffeaea; color: var(--danger-color); border: 1px solid #ffcaca; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-hapus:hover { background-color: var(--danger-color); color: white; }
+        .btn-tambah-paket { width: 100%; background-color: transparent; color: var(--primary-color); border: 2px dashed var(--primary-color); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+        .btn-tambah-paket:hover { background-color: var(--accent-color); }
+
+        .donut-card { background-color: var(--box-bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .donut-card h4 { margin-bottom: 10px; color: #555; font-size: 14px; }
+        
+        .btn-order { width: 100%; background-color: #25D366; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 5px; transition: background-color 0.3s; }
+        .btn-order:hover { background-color: #128C7E; }
+
+        /* Dialog Styling */
+        dialog { margin: auto; border: none; border-radius: 12px; padding: 25px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background-color: #fff; }
+        dialog::backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); }
+        dialog h3 { color: var(--primary-color); margin-bottom: 15px; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 8px; text-align: center;}
+        
+        #ringkasan-teks { font-size: 14px; background-color: #f9f9f9; padding: 15px; border-radius: 8px; white-space: pre-line; margin-bottom: 20px; border-left: 4px solid var(--primary-color); max-height: 250px; overflow-y: auto; }
+        .dialog-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-confirm { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .btn-send { background-color: #25D366; color: white; }
+        .btn-cancel { background-color: #e0e0e0; color: #333; }
+        .btn-full { grid-column: span 2; } 
+
+        .map-container { width: 100%; height: 300px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; margin-bottom: 15px; }
+        .map-container iframe { width: 100%; height: 100%; border: none; }
+        .menu-container { width: 100%; text-align: center; margin-bottom: 15px; }
+        .menu-container img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Shakala Bakery</h1>
+        <p class="subtitle">🍩 Donat Susu Premium 🍩</p>
+
+        <div class="btn-group">
+            <button type="button" class="btn-action" onclick="bukaMap()">📍 Lokasi</button>
+            <button type="button" class="btn-action" onclick="bukaMenu()">🖼️ Lihat Menu</button>
+        </div>
+
+        <form id="orderForm">
+            <div class="form-group">
+                <label class="section-title" for="namaPemesan">Nama Pemesan</label>
+                <input type="text" id="namaPemesan" placeholder="Contoh: Mustofa" required>
+            </div>
+
+            <label class="section-title">Daftar Pesanan</label>
+            
+            <!-- Tempat menampung blok paket secara dinamis -->
+            <div id="keranjang-pesanan"></div>
+
+            <button type="button" class="btn-tambah-paket" onclick="tambahPaketBaru()">
+                + Tambah Paket Lain
+            </button>
+
+            <div class="form-group">
+                <label class="section-title" for="catatan">Catatan Tambahan (Opsional)</label>
+                <input type="text" id="catatan" placeholder="Contoh: Tolong bungkusnya dipisah...">
+            </div>
+
+            <button type="button" class="btn-order" onclick="prosesPesanan()">Checkout & Pesan via WhatsApp</button>
+        </form>
+    </div>
+
+    <!-- Dialog Konfirmasi -->
+    <dialog id="confirmDialog">
+        <h3>Konfirmasi Pesanan</h3>
+        <div id="ringkasan-teks"></div>
+        <div class="dialog-buttons">
+            <button class="btn-confirm btn-cancel" onclick="tutupDialog()">Ubah</button>
+            <button class="btn-confirm btn-send" onclick="bukaWhatsApp()">Kirim Sekarang</button>
+        </div>
+    </dialog>
+
+    <!-- Dialog Peta -->
+    <dialog id="mapDialog">
+        <h3>Lokasi Shakala Bakery</h3>
+        <div class="map-container">
+            <iframe src="https://maps.google.com/maps?q=-7.850877,112.023904&z=15&output=embed" loading="lazy"></iframe>
+        </div>
+        <div class="dialog-buttons">
+            <button class="btn-confirm btn-cancel btn-full" onclick="tutupMap()">Tutup Peta</button>
+        </div>
+    </dialog>
+
+    <!-- Dialog Menu -->
+    <dialog id="menuDialog">
+        <h3>Menu Shakala Bakery</h3>
+        <div class="menu-container">
+            <!-- GANTI LINK GAMBAR DI SINI -->
+            <img src="menu.png" alt="Menu Shakala Bakery">
+        </div>
+        <div class="dialog-buttons">
+            <button class="btn-confirm btn-cancel btn-full" onclick="tutupMenu()">Tutup Menu</button>
+        </div>
+    </dialog>
+
+    <script>
+        // Array Data Varian (Sesuai instruksi terakhir)
+        const varianRasaDonat = ["Coklat", "Matcha", "Stroberi", "Vanila/Susu"];
+        const varianIsianBomboloni = ["Coklat", "Blueberry", "Strawberry"];
+        const varianToping = ["Kacang", "Keju", "Meises Coklat", "Meises Warna-warni", "Scrumble Matcha", "Scrumble Redvelvet", "Scrumble Oreo", "Tanpa Toping"];
+        const pilihanPaket = [
+            { id: "p1", nama: "Donat 10k isi 3", qty: 3, bomboloni: false },
+            { id: "p2", nama: "Donat 20k isi 6", qty: 6, bomboloni: false },
+            { id: "p3", nama: "Donat Bomboloni Mini 10k isi 5", qty: 5, bomboloni: true }
+        ];
+
+        let paketCounter = 0;
+        let teksPesanGlobal = "";
+
+        // Fungsi berjalan otomatis saat web pertama kali dibuka
+        window.onload = function() {
+            tambahPaketBaru(); // Otomatis buat 1 blok pesanan kosong
+        };
+
+        // Fungsi menambah blok form paket baru
+        function tambahPaketBaru() {
+            paketCounter++;
+            const idPaket = `paket-${paketCounter}`;
+            const wadah = document.getElementById('keranjang-pesanan');
+
+            // Bikin kerangka blok paket
+            const divPaket = document.createElement('div');
+            divPaket.className = 'paket-box';
+            divPaket.id = idPaket;
+
+            // Generate opsi dropdown untuk paket
+            let opsiHTML = `<option value="" disabled selected>-- Pilih Jenis Paket --</option>`;
+            pilihanPaket.forEach(p => {
+                opsiHTML += `<option value="${p.id}" data-qty="${p.qty}" data-bomboloni="${p.bomboloni}">${p.nama}</option>`;
+            });
+
+            divPaket.innerHTML = `
+                <div class="paket-header">
+                    <h3>📦 Paket #${paketCounter}</h3>
+                    ${paketCounter > 1 ? `<button type="button" class="btn-hapus" onclick="hapusPaket('${idPaket}')">Hapus</button>` : ''}
+                </div>
+                <select class="pilih-paket" onchange="buatSlotDonat('${idPaket}')" required>
+                    ${opsiHTML}
+                </select>
+                <div class="slot-area"></div>
+            `;
+
+            wadah.appendChild(divPaket);
+            updateNomorPaket();
+        }
+
+        // Fungsi menghapus blok paket
+        function hapusPaket(idPaket) {
+            const elemen = document.getElementById(idPaket);
+            if(elemen) {
+                elemen.remove();
+                updateNomorPaket();
+            }
+        }
+
+        // Memperbarui penomoran paket (agar urut 1, 2, 3 lagi jika ada yang dihapus)
+        function updateNomorPaket() {
+            const boxes = document.querySelectorAll('.paket-box');
+            boxes.forEach((box, index) => {
+                const headerText = box.querySelector('.paket-header h3');
+                headerText.innerText = `📦 Paket #${index + 1}`;
+            });
+        }
+
+        // Membuat slot donat berdasarkan paket yang dipilih dalam blok tersebut
+        function buatSlotDonat(idPaket) {
+            const paketBox = document.getElementById(idPaket);
+            const select = paketBox.querySelector('.pilih-paket');
+            const slotArea = paketBox.querySelector('.slot-area');
+            
+            const selectedOption = select.options[select.selectedIndex];
+            const qty = parseInt(selectedOption.getAttribute('data-qty'));
+            const isBomboloni = selectedOption.getAttribute('data-bomboloni') === "true";
+
+            slotArea.innerHTML = ''; // Bersihkan slot lama
+
+            for (let i = 1; i <= qty; i++) {
+                const card = document.createElement('div');
+                card.className = 'donut-card';
+                
+                let html = `<h4>${isBomboloni ? 'Bomboloni' : 'Donat'} ${i}</h4>`;
+                
+                // Pilihan Rasa / Isian
+                html += `<select class="rasa-select" required>`;
+                if (isBomboloni) {
+                    html += `<option value="" disabled selected>Pilih Isian...</option>`;
+                    varianIsianBomboloni.forEach(isian => html += `<option value="${isian}">${isian}</option>`);
+                } else {
+                    html += `<option value="" disabled selected>Pilih Rasa...</option>`;
+                    varianRasaDonat.forEach(rasa => html += `<option value="${rasa}">${rasa}</option>`);
+                }
+                html += `</select>`;
+
+                // Pilihan Toping (Hanya untuk Donat biasa)
+                if (!isBomboloni) {
+                    html += `<select class="toping-select" required>`;
+                    html += `<option value="" disabled selected>Pilih Toping...</option>`;
+                    varianToping.forEach(toping => html += `<option value="${toping}">${toping}</option>`);
+                    html += `</select>`;
+                }
+
+                card.innerHTML = html;
+                slotArea.appendChild(card);
+            }
+        }
+
+        // Proses validasi dan rangkum data sebelum ke WhatsApp
+        function prosesPesanan() {
+            const namaPemesan = document.getElementById('namaPemesan').value.trim();
+            const catatan = document.getElementById('catatan').value.trim();
+            const paketBoxes = document.querySelectorAll('.paket-box');
+
+            if (!namaPemesan) { alert("Mohon isikan Nama Pemesan!"); return; }
+            if (paketBoxes.length === 0) { alert("Silakan tambah pesanan paket terlebih dahulu."); return; }
+
+            let pesananValid = true;
+            let detailWA = "";
+            let detailUI = "";
+
+            // Looping ke setiap blok paket
+            paketBoxes.forEach((box, index) => {
+                const selectPaket = box.querySelector('.pilih-paket');
+                if (!selectPaket.value) { pesananValid = false; return; }
+
+                const namaPaket = selectPaket.options[selectPaket.selectedIndex].text;
+                const isBomboloni = selectPaket.options[selectPaket.selectedIndex].getAttribute('data-bomboloni') === "true";
+                
+                let pesananTerkumpul = {};
+                const semuaCard = box.querySelectorAll('.donut-card');
+
+                // Validasi dan pengumpulan data dalam 1 paket
+                semuaCard.forEach(card => {
+                    const rasa = card.querySelector('.rasa-select').value;
+                    if (!rasa) pesananValid = false;
+
+                    let kombinasi = "";
+                    if (isBomboloni) {
+                        kombinasi = `Bomboloni ${rasa}`;
+                    } else {
+                        const toping = card.querySelector('.toping-select').value;
+                        if (!toping) pesananValid = false;
+                        kombinasi = `Donat ${rasa} + ${toping}`;
+                    }
+                    
+                    if(rasa) {
+                        pesananTerkumpul[kombinasi] = (pesananTerkumpul[kombinasi] || 0) + 1;
+                    }
+                });
+
+                // Tulis hasil rangkuman per paket
+                if (pesananValid) {
+                    let textPaket = `\n📦 *Pesanan ${index + 1}: ${namaPaket}*\n`;
+                    let textPaketUI = `\n[Pesanan ${index + 1}: ${namaPaket}]\n`;
+                    
+                    for (const [kunci, jumlah] of Object.entries(pesananTerkumpul)) {
+                        textPaket += `- ${jumlah}x ${kunci}\n`;
+                        textPaketUI += `- ${jumlah}x ${kunci}\n`;
+                    }
+                    detailWA += textPaket;
+                    detailUI += textPaketUI;
+                }
+            });
+
+            if (!pesananValid) { 
+                alert("Mohon lengkapi semua pilihan Paket, Rasa, dan Toping di setiap keranjang!"); 
+                return; 
+            }
+
+            // Gabungkan string final
+            teksPesanGlobal = `Halo Shakala Bakery, saya ingin memesan:\n\n👤 *Nama:* ${namaPemesan}\n${detailWA}`;
+            if (catatan) teksPesanGlobal += `\n📝 *Catatan Tambahan:* ${catatan}\n`;
+            teksPesanGlobal += `\nMohon info total harga dan pembayarannya ya. Terima kasih!`;
+            
+            // Tampilkan ke Dialog
+            document.getElementById('ringkasan-teks').innerText = `Nama: ${namaPemesan}\n${detailUI}${catatan ? '\nCatatan: ' + catatan : ''}`;
+            document.getElementById('confirmDialog').showModal();
+        }
+
+        /* --- Fungsi Dialog Tambahan --- */
+        function tutupDialog() { document.getElementById('confirmDialog').close(); }
+        function bukaWhatsApp() { window.open(`https://wa.me/6285859950278?text=${encodeURIComponent(teksPesanGlobal)}`, '_blank'); tutupDialog(); }
+        function bukaMap() { document.getElementById('mapDialog').showModal(); }
+        function tutupMap() { document.getElementById('mapDialog').close(); }
+        function bukaMenu() { document.getElementById('menuDialog').showModal(); }
+        function tutupMenu() { document.getElementById('menuDialog').close(); }
+    </script>
+</body>
+</html>
